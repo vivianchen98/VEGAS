@@ -1,0 +1,155 @@
+hydra:
+  output_subdir: null
+  run:
+    dir: .
+
+full_report_prompt: |
+  You will receive 10 slides. Analyze all content and write a clear narrative report for a general audience.
+
+  **Format:**
+  Write three coherent paragraphs (~250 words total) that explain the main message, key ideas, and overall flow of the presentation. Do not include any subheadings.
+
+  **Guidelines:**
+  * Do not refer to individual slides.
+  * Integrate relevant visual elements only when they clarify the ideas.
+  * Show how the ideas connect and build on each other.
+  * Use clear, accessible language.
+  * Avoid generic transition phrases such as “The presentation introduces” or “The content then expands into.”
+
+aria_captioning_prompt: |
+  You are the wearer of the Aria glasses, documenting your movements in real-time. Your goal is to provide a play-by-play of your physical actions and interactions from a first-person perspective.
+
+  Rules of Engagement:
+  - Perspective: Use the first-person pronoun ("I").
+  - Format: Every entry must start with a timestamp bracket: [Start_Time - End_Time] I [Action].
+  - Physical Transitions: CRITICAL: Do not skip brief but distinct object manipulations. If I flip, rotate, or orient an object (e.g., flipping a phone face-down), document this as a discrete micro-action before moving to the next task.
+  - Granularity vs. Consolidation:
+    - Describe discrete physical transitions (flipping, reaching, gripping) as individual micro-actions.
+    - Once a continuous state begins (e.g., playing a game, stirring), consolidate that duration into a single entry.
+  - Object Detail: Reference specific objects and their orientations (e.g., "flipped the phone screen-down").
+  - Ambiguity Handling: If there is a segment where you cannot clearly identify the action due to occlusion, extreme motion blur, or the hands leaving the frame, use the reserved token <UNIDENTIFIABLE_ACTION>. Do not guess.
+  - Ensure start_time and end_time are provided as floats.
+  Example Output:
+  {
+    "segments": [
+      {
+        "start_time": 0.0,
+        "end_time": 1.7,
+        "action": "I gripped my smartphone and flipped it face-down onto the bed."
+      },
+      {
+        "start_time": 1.7,
+        "end_time": 3.0,
+        "action": "I reached over and gripped the left side of the gaming console with my left hand.."
+      },
+      {
+        "start_time": 3.0,
+        "end_time": 5.2,
+        "action": "<UNIDENTIFIABLE_ACTION>"
+      },
+      {
+        "start_time": 5.2,
+        "end_time": 8.0,
+        "action": "I played on the gaming console with both hands, using my right thumb to navigate the touchscreen interface through a series of taps."
+      }
+    ]
+  }
+
+keyword_masking_prompt: >
+  Extract up to 20 keywords from the provided paragraph by selecting the most distinctive descriptors—specifically objects, motions, or events—that are directly relevant to the video content.
+  Exclude the word "video" as a keyword.
+  Include each remaining keyword only once, using the original word form as they appear in the paragraph (do not apply stemming or lemmatization),
+  and ensure all keywords are presented as a single lowercase word.
+  Arrange the keywords sequentially as they appear in the paragraph.
+  If fewer than 20 suitable keywords are identifiable, return only those present. Avoid duplicates.
+  ## Output Format
+  Output a list of words as a JSON array, for example:
+  ["dog", "jump", "frisbee", "park"]
+
+vegas_prompt: |
+  Given the video frames and the masked caption of a video: {masked_caption}.
+  Guess all [MASK] words originally representing any words describing the video,
+  e.g., first_guess second_guess. Return only the answers, without any explanation.
+  Do not use quotes or commas; separate tokens with a single space.
+
+# "Given the video, predict the next word of the caption. Do not say anything else but the next word."
+
+captioning_prompt: |
+  You are a video content annotator. Generate **one concise, objective paragraph** describing the provided video in a **natural, human-annotator style**.
+
+  **Guidelines:**
+  * Describe the **setting**, **main subjects or objects**, and **key actions** in chronological order.
+  * **Do NOT use meta phrases** such as “the video begins with,” “the clip shows,” or “the camera shows.”
+  * Start sentences **directly with the observable subject or action** (e.g., “A woman in a blue dress walks…”).
+  * Include only **essential visual details** when relevant.
+
+  **Constraints:**
+  * Output only the descriptive paragraph.
+  * No interpretation, speculation, or non-observable information.
+  * Maintain a neutral, factual tone.
+
+gaze_masked_captioning_prompt: |
+  You are a video content annotator describing a visual gaze path. Generate **one concise paragraph** describing the visible sequence of focus in a **natural, human-annotator style**.
+
+  **Guidelines:**
+  * Describe only the objects, subjects, and actions visible within the focused areas in chronological order of their appearance.
+  * Write the description as if it is the direct experience of the person viewing the scene (the "gaze path").
+  * **Do NOT use meta phrases** such as “the video shows,” “the gaze moves to,” or “the visible circle contains.”
+  * **NEVER mention** a peephole, circular view, masking, or blackened areas.
+  * Start sentences **directly with the subject of focus** (e.g., “A hand reaches for a cup,” followed by “The steam rises from the liquid”).
+
+  **Constraints:**
+  * Output only the descriptive paragraph.
+  * Focus exclusively on the details revealed by the movement of the focus point.
+  * Maintain a neutral, factual tone based only on what is glimpsed.
+
+gaze_annotated_captioning_prompt: |
+  You are a video content annotator. Gaze fixations are marked with red circles. Generate one concise paragraph describing the scene strictly in the order of gaze movement, using natural, human-like language.
+
+  **Guidelines:**
+  * Describe only the objects, people, and actions visible within the red circles, in the chronological order of gaze.
+  * Do not refer to gaze explicitly (no phrases like “the focus,” “center of attention,” or “first point of focus”).
+  * Start sentences naturally with the subject or object being observed (e.g., “A hand reaches for a cup,” then “The steam rises from the liquid”).
+  * Keep a neutral, factual tone, based only on what is glimpsed.
+  * Maintain smooth and coherent flow, as if narrating what a person sees while their eyes move naturally across the scene.
+
+  **Output:**
+  * Only a single descriptive paragraph.
+
+gaze_foveated_captioning_prompt: |
+  You are a video content annotator. The scene is foveated at gaze fixations, with the surrounding areas blurred. Generate one concise paragraph describing the scene strictly in the order of gaze movement, using natural, human-like language.
+
+  **Guidelines:**
+  * Describe only the objects, people, and actions visible within the foveated areas, in the chronological order of gaze.
+  * Do not refer to gaze explicitly (no phrases like “the focus,” “center of attention,” or “first point of focus”).
+  * Do not mention the blurring or foveation effect.
+  * Start sentences naturally with the subject or object being observed (e.g., “A hand reaches for a cup,” then “The steam rises from the liquid”).
+  * Keep a neutral, factual tone, based only on what is glimpsed.
+  * Maintain smooth and coherent flow, as if narrating what a person sees while their eyes move naturally across the scene.
+
+  **Output:**
+  * Only a single descriptive paragraph.
+
+frames_captioning_prompt: |
+  You are a video content annotator. Generate one concise, objective paragraph describing a video based on a sequence of provided frames, given in chronological order, in a natural, human-annotator style.
+
+  **Guidelines:**
+    * Describe the **setting**, **main subjects or objects**, and **key actions** in chronological order.
+    * **Do NOT use meta phrases** such as “the video begins with,” “the clip shows,” or “the camera shows.”
+    * Start sentences **directly with the observable subject or action** (e.g., “A woman in a blue dress walks…”).
+    * Include only **essential visual details** when relevant.
+    * Do NOT reference frame counts or frame numbers.
+    * Base descriptions strictly on what is visible across the provided frames, using changes between frames to indicate actions when clearly observable.
+
+  **Constraints:**
+    * Output only the descriptive paragraph.
+    * No interpretation, speculation, or non-observable information.
+    * Maintain a neutral, factual tone.
+
+orthogonal_captioning_prompt: |
+  You are given a video represented as a sequence of frames, and a caption describing the video.
+  Identify information that is visually grounded in the video but not expressed in the caption. This includes actions, attributes, interactions, spatial relations, temporal events, or contextual details that are observable in the video yet missing from the caption.
+  Produce a concise natural-language description that only includes this missing (orthogonal) information.
+
+  Do not repeat, paraphrase, or elaborate on content already mentioned in the caption.
+  Do not speculate beyond what is visible in the video.

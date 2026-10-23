@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Environments and secrets
+.env
+.env.*
+!.env.example
+*credential*.json
+*credentials*.json
+*token*.pickle
+*_token.pickle
+
+# Local/editor state
+.cache/
+.matplotlib-cache/
+.vscode/
+.DS_Store
+
+# Generated outputs and local data
+outputs/
+archive/
+/data/
+/TMLR_VEGAS_Rebuttal.md
+src/analysis/generated/
+src/analysis/figures/
+*.log
+*.csv
+*.png
+*.jpg
+*.jpeg
+*.pdf
+*.mp4
+*.pt
+*.zip
+/vinet_v2/
+/test_output_frames/
+/test_video/
+/EyeFormer/
+
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.out
+*.synctex.gz
+
+# External manuscript source is not part of this repo
+paper/

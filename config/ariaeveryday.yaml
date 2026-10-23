@@ -1,0 +1,44 @@
+defaults:
+  - base
+  - override hydra/hydra_logging: disabled
+  - override hydra/job_logging: disabled
+  - _self_
+
+gemini_model: "gemini-3.1-pro-preview"
+
+ds:
+  root_path: ${oc.env:ARIAEVERYDAY_ROOT,""}
+  captions_csv: "${ds.root_path}/aggregated_captions.csv"
+  id_column: "vid"
+  action_id_column: "action_id"
+  caption_column: "gemini_caption"
+  raw_video_template: "data/VEGAS_MEDIA/AriaEverydayActivities/raw/{vid}_{action_id}.mp4"
+  masked_video_template: "data/VEGAS_MEDIA/AriaEverydayActivities/foveated/{vid}_{action_id}.mp4"
+  video_id_dir: "${ds.root_path}/sampled_video_duration.csv"
+  clips_dir: "${ds.root_path}/clips"
+  captions_dir:
+    original: "${ds.root_path}/captions/original"
+    original_gemini_json: "${ds.captions_dir.original}/json_gemini"
+    original_gemini_csv: "${ds.captions_dir.original}/captions_gemini.csv"
+    gaze_foveated: "${ds.root_path}/captions/gaze_foveated"
+    human: "${ds.root_path}/captions/human/aggregated_captions.json"
+    aggregated: "${ds.root_path}/aggregated_captions.csv"
+  metrics_dir:
+    vegas: "${ds.root_path}/metrics/vegas"
+    vegas_orig_gaze_foveated: "${ds.root_path}/metrics/vegas_orig_gaze_foveated"    # original caption vs gaze-foveated caption
+retrieval:
+  similarity_path: "${ds.root_path}/metrics/similarity"
+
+model:
+  sbert_encoder_model_name: "all-mpnet-base-v2" # "Alibaba-NLP/gte-large-en-v1.5" "all-MiniLM-L6-v2"
+  # sbert_encoder_model_name: "all-MiniLM-L6-v2" # "Alibaba-NLP/gte-large-en-v1.5" 
+
+output_schema_path: "${ds.root_path}/ariaeveryday_schema.json"
+caption_type: "original" # "original" or "gaze_masked" or "gaze_annotated" or "gaze_foveated" or "human"
+num_workers: 8
+sample: 0  # number of clips to randomly sample and extract (0=skip)
+seed: 42
+burn_caption: true  # burn caption text onto extracted clips
+video_type: "foveated"  # original, annotated, or foveated
+
+vid: "loc3_script3_seq2_rec1_1"

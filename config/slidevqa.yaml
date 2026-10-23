@@ -1,0 +1,20 @@
+defaults:
+  - base
+  - override hydra/hydra_logging: disabled
+  - override hydra/job_logging: disabled
+  - _self_
+
+ds:
+  root_path: ${oc.env:SLIDEVQA_ROOT,""}
+  captions_csv: "${ds.root_path}/aggregated_captions.csv"
+  id_column: "slide_id"
+  action_id_column: "slide_num"
+  caption_column: "gemini_groundtruth"
+  raw_video_template: "data/VEGAS_MEDIA/SlideVQA/raw/{slide_id}_{slide_num}.jpg"
+  masked_video_template: "data/VEGAS_MEDIA/SlideVQA/heatmap/{slide_id}_{slide_num}.png"
+  metrics_dir:
+    vegas: "${ds.root_path}/metrics/vegas"
+  slides_dir: "${ds.root_path}/slides"
+  videos_dir: "${ds.root_path}/slide_videos"
+  saliency_dir: "${ds.root_path}/saliency"
+  captions_dir: "${ds.root_path}/captions"

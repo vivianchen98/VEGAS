@@ -1,0 +1,40 @@
+[project]
+name = "vegas-gaze"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "torch",
+    "hydra-core",
+    "omegaconf",
+    "tqdm",
+    "opencv-python",
+    "Pillow",
+    "einops",
+    "pandas",
+    "numpy",
+    "openai",
+    "google-genai",
+    "sentence-transformers",
+    "scikit-learn",
+    "scipy",
+    "python-dotenv",
+    "huggingface-hub",
+    "matplotlib",
+    "psutil",
+    "nltk",
+    "krippendorff",
+    "pycocoevalcap",
+]
+
+[tool.ruff]
+# Global settings
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = []
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

@@ -1,0 +1,24 @@
+defaults:
+  - prompt
+  - override hydra/hydra_logging: disabled
+  - override hydra/job_logging: disabled
+  - _self_
+
+gemini_model: "gemini-3.1-pro-preview"
+gpt_model: "gpt-5-chat-latest" # "gpt-4o" 
+
+contrastive_decoding_sample_num: 3
+caption_model: "Qwen3.5-122B-A10B"
+# evaluation_model: "gpt-4o" # "gemini-2.0-flash"
+
+dry_run: false
+limit: 0
+require_media: true
+vegas_gamma: 1.0
+top_logprobs_k: 5
+default_logprob: -5.0
+length_normalize: false
+video_fps: null
+video_frame_sample_rate: null
+video_max_frames: null
+
