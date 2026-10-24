@@ -8,6 +8,10 @@
 <a href="https://arxiv.org/abs/2607.08489"><img src="https://img.shields.io/badge/arXiv-2607.08489-b31b1b?style=for-the-badge&logo=arxiv&logoColor=white" alt="arXiv"></a>
 <a href="https://huggingface.co/datasets/vivianchen98/VEGAS"><img src="https://img.shields.io/badge/Dataset-HuggingFace-yellow?style=for-the-badge&logo=huggingface&logoColor=black" alt="Dataset"></a>
 
+<br><br>
+
+<img src="assets/vegas_teaser.png" width="85%" alt="VEGAS overview">
+
 </div>
 
 ## TL;DR

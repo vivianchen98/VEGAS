@@ -38,6 +38,10 @@ src/analysis/figures/
 *.mp4
 *.pt
 *.zip
+!assets/*.png
+!assets/*.jpg
+!assets/*.jpeg
+!assets/*.svg
 /vinet_v2/
 /test_output_frames/
 /test_video/
