@@ -4,9 +4,9 @@
 
 **Transactions on Machine Learning Research (TMLR), 2026**
 
-[![Project Page](https://img.shields.io/badge/Project-Page-blue)](https://vivianchen98.github.io/VEGAS_website/)
-[![Paper](https://img.shields.io/badge/arXiv-2607.08489-b31b1b)](https://arxiv.org/abs/2607.08489)
-[![Dataset](https://img.shields.io/badge/HuggingFace-Dataset-yellow)](https://huggingface.co/datasets/vivianchen98/VEGAS)
+<a href="https://vivianchen98.github.io/VEGAS_website/"><img src="https://img.shields.io/badge/Website-VEGAS-blue?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Website"></a>
+<a href="https://arxiv.org/abs/2607.08489"><img src="https://img.shields.io/badge/arXiv-2607.08489-b31b1b?style=for-the-badge&logo=arxiv&logoColor=white" alt="arXiv"></a>
+<a href="https://huggingface.co/datasets/vivianchen98/VEGAS"><img src="https://img.shields.io/badge/Dataset-HuggingFace-yellow?style=for-the-badge&logo=huggingface&logoColor=black" alt="Dataset"></a>
 
 </div>
 
