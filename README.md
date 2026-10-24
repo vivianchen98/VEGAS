@@ -34,6 +34,24 @@ OPENAI_API_KEY=...
 GOOGLE_API_KEY=...
 ```
 
+<details>
+<summary>Agent checklist</summary>
+
+- Run all commands from the repository root.
+- Use Python 3.10 and install `ffmpeg` before preparing AEA video clips.
+- `src/data/download_dataset.py` updates `.env` with `ARIAEVERYDAY_ROOT` and `SLIDEVQA_ROOT`.
+- Replace `/path/to/original/...` with local paths to the original Aria Everyday Activities and SlideVQA datasets.
+- Configure API keys or a local model backend before running full VEGAS scoring.
+
+Optional smoke test without model calls:
+
+```bash
+python src/experiments/compute_vegas.py --config-name=ariaeveryday dry_run=true limit=5
+python src/experiments/compute_vegas.py --config-name=slidevqa dry_run=true limit=5
+```
+
+</details>
+
 ## Data
 
 Download the released VEGAS metadata, captions, gaze, heatmaps, and segment files from Hugging Face:
