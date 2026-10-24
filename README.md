@@ -38,33 +38,28 @@ Download the released VEGAS metadata, captions, gaze, heatmaps, and segment file
 python src/data/download_dataset.py --output-dir data/VEGAS
 ```
 
-The Hugging Face release does not redistribute all original raw media from Aria Everyday Activities or SlideVQA. To run end-to-end scoring, prepare a local media subset from your copies of those datasets:
+The Hugging Face release does not redistribute all original raw media from the source datasets. To run end-to-end scoring, first obtain local copies of the original datasets:
+
+- Aria Everyday Activities: <https://huggingface.co/papers/2402.13349>
+- SlideVQA: <https://huggingface.co/papers/2301.04883>
+
+Then prepare local media files from your copies of those datasets:
 
 ```bash
 python src/data/prepare_media_subset.py \
   --dataset all \
-  --limit 5 \
   --aea-source-root /path/to/original/AriaEverydayActivity \
   --slidevqa-source-root /path/to/original/SlideVQA/slides
 ```
 
 ## Run VEGAS
 
-Validate metadata and media paths without model calls:
-
-```bash
-python src/experiments/compute_vegas.py --config-name=ariaeveryday dry_run=true limit=5
-python src/experiments/compute_vegas.py --config-name=slidevqa dry_run=true limit=5
-```
-
 Compute VEGAS scores:
 
 ```bash
-python src/experiments/compute_vegas.py --config-name=ariaeveryday limit=5
-python src/experiments/compute_vegas.py --config-name=slidevqa limit=5
+python src/experiments/compute_vegas.py --config-name=ariaeveryday
+python src/experiments/compute_vegas.py --config-name=slidevqa
 ```
-
-Remove `limit=5` to run the full released split after your data and model backend are configured.
 
 ## Evaluation
 
