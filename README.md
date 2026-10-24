@@ -52,6 +52,37 @@ python src/data/prepare_media_subset.py \
   --slidevqa-source-root /path/to/original/SlideVQA/slides
 ```
 
+<details>
+<summary>Expected local data layout</summary>
+
+```text
+data/
+├── VEGAS/                      # Downloaded from Hugging Face
+│   ├── AriaEverydayActivities/
+│   │   ├── aggregated_captions.csv
+│   │   ├── gaze_features/
+│   │   ├── metrics/
+│   │   └── ...
+│   └── SlideVQA/
+│       ├── aggregated_captions.csv
+│       ├── gaze_features/
+│       ├── heatmaps/
+│       ├── metrics/
+│       └── ...
+└── VEGAS_MEDIA/                # Prepared locally from original datasets
+    ├── manifest.csv
+    ├── AriaEverydayActivities/
+    │   ├── raw/*.mp4
+    │   └── foveated/*.mp4
+    └── SlideVQA/
+        ├── raw/*.jpg
+        └── heatmap/*.png
+```
+
+`data/` is ignored by Git and should remain local.
+
+</details>
+
 ## Run VEGAS
 
 Compute VEGAS scores:
