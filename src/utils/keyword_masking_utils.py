@@ -1,3 +1,7 @@
+
+import logging
+
+logger = logging.getLogger(__name__)
 import ast
 import os
 import re
@@ -152,11 +156,11 @@ if __name__ == "__main__":
         #     "appears",
         #     "capturing",
         # ]
-        print(keywords)
+        logger.debug('%s', keywords)
         masked_paragraph = mask_keywords_separated(
             paragraph,
             keywords,
         )
-        print(masked_paragraph)
+        logger.debug('%s', masked_paragraph)
 
     run()

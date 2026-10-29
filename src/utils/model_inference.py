@@ -4,18 +4,20 @@ This module contains the shared base class plus Gemini, OpenAI GPT, and
 OpenAI-compatible local-model clients.
 """
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 # ---- base class ----
 import os
 from abc import ABC, abstractmethod
 
-from dotenv import load_dotenv
 
 
 class BaseAPIInference(ABC):
     def __init__(self):
-        # Load environment variables from .env.local
-        # load_dotenv(dotenv_path=".env.local")  # loads .env in current directory
-        load_dotenv()
+
+        load_environment()
         self.GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
         self.OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
@@ -41,6 +43,7 @@ from omegaconf import DictConfig
 from PIL import Image
 
 sys.path.append(str(Path(__file__).resolve().parents[2]))
+from src.utils.runtime import load_environment
 
 
 class GeminiInference(BaseAPIInference):
@@ -79,14 +82,23 @@ class GeminiInference(BaseAPIInference):
             # Upload the video file and wait until it's active
             video_file = self.client.files.upload(file=video_path)
             state = video_file.state.name
+            timeout = float(self.cfg.get("upload_timeout_seconds", 300))
+            if timeout <= 0:
+                raise ValueError("upload_timeout_seconds must be positive")
+            deadline = time.monotonic() + timeout
             while state != "ACTIVE":
-                print(f"[{state} UPLOAD] {video_file.name}")
-                time.sleep(10)  # wait for 10 seconds before checking again
+                if state == "FAILED":
+                    raise RuntimeError(f"Video processing failed: {video_file.name}")
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise TimeoutError(f"Video processing timed out after {timeout}s: {video_file.name}")
+                logger.debug('%s', f"[{state} UPLOAD] {video_file.name}")
+                time.sleep(min(10, remaining))
                 video_file = self.client.files.get(name=video_file.name)
                 state = video_file.state.name
             self.google_drive_file_path2file_id[video_path] = video_file.name
         else:
-            print("Reusing previously uploaded video file.")
+            logger.debug('%s', "Reusing previously uploaded video file.")
             video_file = self.client.files.get(
                 name=self.google_drive_file_path2file_id[video_path],
             )
@@ -268,14 +280,14 @@ class GeminiInference(BaseAPIInference):
 
     def pretty_print_gemini_result(self, text, logprobs, max_items=120):
         # 1) Print the final text
-        print("\n=== Model Response ===")
-        print(text.strip())
+        logger.debug('%s', "\n=== Model Response ===")
+        logger.debug('%s', text.strip())
 
         # 2) Tabular per-token view
-        print("\n=== Token Logprobs ===")
+        logger.debug('%s', "\n=== Token Logprobs ===")
         header = f"{'#':>4}  {'token':<20}  {'id':>8}  {'logp':>12}  {'prob':>12}  {'cum_logp':>12}"
-        print(header)
-        print("-" * len(header))
+        logger.debug('%s', header)
+        logger.debug('%s', "-" * len(header))
 
         cum = 0.0
         for i, c in enumerate(logprobs[:max_items]):
@@ -298,12 +310,10 @@ class GeminiInference(BaseAPIInference):
             if len(token_disp) > 20:
                 token_disp = token_disp[:17] + "..."
 
-            print(
-                f"{i:>4}  {token_disp:<20}  {token_id!s:>8}  {logp_s}  {prob_s}  {cum_s}",
-            )
+            logger.debug('%s', f"{i:>4}  {token_disp:<20}  {token_id!s:>8}  {logp_s}  {prob_s}  {cum_s}")
 
         if len(logprobs) > max_items:
-            print(f"... {len(logprobs) - max_items} more tokens omitted ...")
+            logger.debug('%s', f"... {len(logprobs) - max_items} more tokens omitted ...")
 
 
 if __name__ == "__main__":
@@ -318,7 +328,7 @@ if __name__ == "__main__":
                 "path/to/example_image_2.png",
             ],
         )
-        print(f"Total tokens counted: {num_tokens}")
+        logger.debug('%s', f"Total tokens counted: {num_tokens}")
 
     run()
 
@@ -503,7 +513,7 @@ if __name__ == "__main__":
         # response_text = gpt_inference.text_inference(
         #     "Tell me what is Turing Test.",
         # )
-        print(response_text)
+        logger.debug('%s', response_text)
 
     run()
 
@@ -556,8 +566,8 @@ class LocalModelInference(BaseAPIInference):
             api_key="EMPTY",
         )
 
-        print(f"✓ LocalModelInference initialized: {self.model}")
-        print(f"  Base URL: {self.base_url}")
+        logger.debug('%s', f"✓ LocalModelInference initialized: {self.model}")
+        logger.debug('%s', f"  Base URL: {self.base_url}")
 
     @staticmethod
     def strip_cot_thinking(text: str) -> str:
@@ -798,7 +808,7 @@ class LocalModelInference(BaseAPIInference):
             except Exception as e:
                 if attempt < max_retries - 1:
                     wait_time = 5 * (2 ** attempt)  # 5s, 10s, 20s
-                    print(f"  [Retry {attempt + 1}/{max_retries}] Connection error: {e}. Retrying in {wait_time}s...")
+                    logger.warning('%s', f"  [Retry {attempt + 1}/{max_retries}] Connection error: {e}. Retrying in {wait_time}s...")
                     time.sleep(wait_time)
                 else:
                     raise

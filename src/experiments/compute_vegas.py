@@ -1,3 +1,7 @@
+
+import logging
+
+logger = logging.getLogger(__name__)
 import csv
 import os
 import re
@@ -11,22 +15,11 @@ import pandas as pd
 from tqdm import tqdm
 
 
-def load_env_file(env_path: str | Path = ".env") -> None:
-    env_file = Path(env_path)
-    if not env_file.exists():
-        return
-    for line in env_file.read_text().splitlines():
-        line = line.strip()
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-        key, value = line.split("=", 1)
-        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
-
-
-load_env_file()
-
 sys.path.append(str(Path(__file__).resolve().parents[2]))
 from src.utils.vegas import vegas_scoring_with_masking
+from src.utils.runtime import load_environment, configure_logging
+
+load_environment()
 
 # Example:
 # python src/experiments/compute_vegas.py --config-name=ariaeveryday video_type=gaze_foveated caption_col=gemini_groudtruth_edited
@@ -73,7 +66,7 @@ def resolve_existing_captions_csv(cfg: DictConfig, ds_root: Path) -> tuple[Path,
         candidate_root = ds_root / child_name
         candidate_csv = candidate_root / "aggregated_captions.csv"
         if candidate_csv.exists():
-            print(f"Using detected dataset root: {candidate_root}")
+            logger.info('%s', f"Using detected dataset root: {candidate_root}")
             return candidate_root, candidate_csv
 
     return ds_root, captions_csv
@@ -81,8 +74,9 @@ def resolve_existing_captions_csv(cfg: DictConfig, ds_root: Path) -> tuple[Path,
 
 @main(version_base=None, config_path="../../config", config_name="ariaeveryday")
 def compute_vegas(cfg: DictConfig) -> None:
+    configure_logging()
     caption_col: str = cfg.get("caption_col", cfg.ds.get("caption_column", "caption"))
-    print(f"Using caption column: {caption_col}")
+    logger.info('%s', f"Using caption column: {caption_col}")
 
     ds_root = Path(cfg.ds.root_path)
     if not str(ds_root):
@@ -119,7 +113,7 @@ def compute_vegas(cfg: DictConfig) -> None:
     else:
         model_key, inference_instance = build_inference_instance(cfg)
     output_file = output_dir / f"vegas_scores_{caption_col}_{model_key}_{masked_video_type}.csv"
-    print("output_file", output_file)
+    logger.info('%s %s', "output_file", output_file)
     scoring_controls = get_scoring_controls(cfg)
 
     # Load existing results if any to support resume
@@ -130,9 +124,9 @@ def compute_vegas(cfg: DictConfig) -> None:
             for _, r in results_df.iterrows():
                 processed_pairs.add(str(r["example_id"]))
         except Exception as e:
-            print(f"Warning: Could not load existing CSV {output_file}: {e}")
+            logger.warning('%s', f"Warning: Could not load existing CSV {output_file}: {e}")
             processed_pairs = set()
-        print("processed_pairs", processed_pairs, "len(processed_pairs)", len(processed_pairs))
+        logger.debug('%s %s %s %s', "processed_pairs", processed_pairs, "len(processed_pairs)", len(processed_pairs))
 
     result_fields = [
         "video_id",
@@ -161,36 +155,36 @@ def compute_vegas(cfg: DictConfig) -> None:
             video_id = str(row.get(id_column))
             action_id = row.get(action_id_column) if action_id_column else ""
             example_id = f"{video_id}_{action_id}" if action_id_column else video_id
-            print(f"Processing row with example_id={example_id}")
+            logger.debug('%s', f"Processing row with example_id={example_id}")
 
             # Use the user-selected caption column
             caption = row.get(caption_col)
-            print(f"Caption for {example_id}: {caption}")
+            logger.debug('%s', f"Caption for {example_id}: {caption}")
             if pd.isna(caption) or caption is None:
-                print(f"Warning: no caption for {video_id} {action_id}, skipping.")
+                logger.warning('%s', f"Warning: no caption for {video_id} {action_id}, skipping.")
                 continue
 
             video_path = format_path(str(raw_video_template), row, ds_root) if raw_video_template else None
             masked_video_path = format_path(str(masked_video_template), row, ds_root) if masked_video_template else None
 
             if example_id in processed_pairs:
-                print(f"Skipping {example_id} as it has been processed.")
+                logger.info('%s', f"Skipping {example_id} as it has been processed.")
                 continue
 
             media_available = bool(video_path and masked_video_path and video_path.exists() and masked_video_path.exists())
             if require_media and not media_available:
                 if not dry_run:
                     if video_path and not video_path.exists():
-                        print(f"Warning: Raw video {video_path} not found. Skipping.")
+                        logger.warning('%s', f"Warning: Raw video {video_path} not found. Skipping.")
                     if masked_video_path and not masked_video_path.exists():
-                        print(f"Warning: Masked video {masked_video_path} not found. Skipping.")
+                        logger.warning('%s', f"Warning: Masked video {masked_video_path} not found. Skipping.")
                     if not video_path or not masked_video_path:
-                        print("Warning: raw_video_template/masked_video_template not configured. Skipping.")
+                        logger.warning('%s', "Warning: raw_video_template/masked_video_template not configured. Skipping.")
                     continue
 
             if dry_run:
                 media_msg = "media OK" if media_available else "metadata OK; media not configured/found"
-                print(f"Dry run OK: {example_id} ({media_msg})")
+                logger.info('%s', f"Dry run OK: {example_id} ({media_msg})")
                 continue
 
             # Parse keywords and candidates
@@ -198,7 +192,7 @@ def compute_vegas(cfg: DictConfig) -> None:
             candidates = [caption]
             candidate_keywords = [keywords]
 
-            print("Processing", example_id)
+            logger.debug('%s %s', "Processing", example_id)
 
             try:
                 scores = vegas_scoring_with_masking(
@@ -236,7 +230,7 @@ def compute_vegas(cfg: DictConfig) -> None:
 
                 processed_pairs.add(example_id)
             except Exception as e:
-                print(f"Error processing {video_id} (action={action_id}): {e}")
+                logger.error('%s', f"Error processing {video_id} (action={action_id}): {e}")
                 continue
     finally:
         out_f.close()

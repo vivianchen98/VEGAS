@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 import argparse
 import csv
 import shutil
@@ -209,10 +213,11 @@ def main() -> None:
     manifest_path = Path(args.manifest)
     write_manifest(rows, manifest_path)
     ready = sum(row["raw_ready"] == "True" and row["masked_ready"] == "True" for row in rows)
-    print(f"Wrote {len(rows)} rows to {manifest_path}")
-    print(f"Fully ready examples: {ready}/{len(rows)}")
-    print("Use raw_path/masked_path from the manifest to configure raw_video_template and masked_video_template.")
+    logger.info('%s', f"Wrote {len(rows)} rows to {manifest_path}")
+    logger.info('%s', f"Fully ready examples: {ready}/{len(rows)}")
+    logger.info('%s', "Use raw_path/masked_path from the manifest to configure raw_video_template and masked_video_template.")
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
     main()

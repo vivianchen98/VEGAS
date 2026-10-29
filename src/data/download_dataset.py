@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 import argparse
 import os
 from pathlib import Path
@@ -53,11 +57,12 @@ def main() -> None:
     args = parser.parse_args()
 
     output_path = download_dataset(args.output_dir, args.repo_id)
-    print(f"Downloaded {args.repo_id} to {output_path}")
+    logger.info('%s', f"Downloaded {args.repo_id} to {output_path}")
     if not args.skip_env:
         write_env_file(output_path, args.env_path)
-        print(f"Updated {args.env_path} with ARIAEVERYDAY_ROOT and SLIDEVQA_ROOT")
+        logger.info('%s', f"Updated {args.env_path} with ARIAEVERYDAY_ROOT and SLIDEVQA_ROOT")
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
     main()

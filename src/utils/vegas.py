@@ -1,3 +1,7 @@
+
+import logging
+
+logger = logging.getLogger(__name__)
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
@@ -81,9 +85,7 @@ def cal_token_prob(
                 continue
             if token_guessed[j] != "" and word_gt.startswith(token_guessed[j]):
                 if verbose:
-                    print(
-                        f"Match found for '{word_gt}' with '{token_guessed[j]}' at index {j}",
-                    )
+                    logger.debug('%s', f"Match found for '{word_gt}' with '{token_guessed[j]}' at index {j}")
                 logprob_list.append(top_logprobs[j])
                 correct_guess = True
                 matched_indices.append(j)
@@ -93,9 +95,7 @@ def cal_token_prob(
             logprob_list.append(default_logprob)
             rank_list.append(num_candidates + 1)
             if verbose:
-                print(
-                    f"No match found for {word_gt}. Assigning default logprob {default_logprob}",
-                )
+                logger.debug('%s', f"No match found for {word_gt}. Assigning default logprob {default_logprob}")
 
     assert len(logprob_list) == len(
         masked_word_gt,
@@ -213,14 +213,14 @@ def vegas_scoring_with_masking(
             **video_kwargs,
             **kwargs,
         )
-        print("Original video guess:", original_guess)
+        logger.debug('%s %s', "Original video guess:", original_guess)
         masked_guess, masked_lp = inference_instance.video_inference(
             video_masked_path,
             input_prompt,
             **video_kwargs,
             **kwargs,
         )
-        print("Masked video guess:", masked_guess)
+        logger.debug('%s %s', "Masked video guess:", masked_guess)
 
         raw_logprob, raw_ranking = cal_token_prob(
             raw_lp,
@@ -243,9 +243,7 @@ def vegas_scoring_with_masking(
             contrastive_score = contrastive_score / n_scored_tokens
         score += contrastive_score
 
-        print(
-            f"Candidate: {cand} | Keywords: {keywords} | Raw: {raw_score:.4f}, Masked: {masked_score:.4f}, Contrastive: {contrastive_score:.4f}",
-        )
+        logger.debug('%s', f"Candidate: {cand} | Keywords: {keywords} | Raw: {raw_score:.4f}, Masked: {masked_score:.4f}, Contrastive: {contrastive_score:.4f}")
         return (
             cand,
             score,
@@ -436,9 +434,7 @@ def vegas_scoring(
             contrastive_score = raw_score - (gamma * masked_score)
             score += contrastive_score
 
-            print(
-                f"Candidate: {cand} | Token: {token_text} | raw: {raw_score:.4f}, masked: {masked_score:.4f}, contrastive: {contrastive_score:.4f}",
-            )
+            logger.debug('%s', f"Candidate: {cand} | Token: {token_text} | raw: {raw_score:.4f}, masked: {masked_score:.4f}, contrastive: {contrastive_score:.4f}")
         return cand, score, raw_logprobs, masked_logprobs, raw_rankings, masked_rankings
 
     if multithread:
@@ -488,7 +484,7 @@ def contrastive_token_decoding(
         # Get top-5 candidates for the next token from both inputs
         # We append current_text to the prompt to 'force' the state
         current_prompt = f"{prompt}\nCaption: {current_text}"
-        print("current_prompt:", current_prompt)
+        logger.debug('%s %s', "current_prompt:", current_prompt)
 
         _, raw_top = inference_instance.video_inference(
             video_raw_path,
@@ -547,16 +543,7 @@ def contrastive_token_decoding(
             raw_lp_norm = (raw_lp / T) - log_Z_raw
             masked_lp_norm = (masked_lp / T) - log_Z_masked
             score = raw_lp_norm - (gamma * masked_lp_norm)
-            print(
-                "token",
-                token,
-                "raw_lp",
-                raw_lp,
-                "masked_lp",
-                masked_lp,
-                "score",
-                score,
-            )
+            logger.debug('%s %s %s %s %s %s %s %s', "token", token, "raw_lp", raw_lp, "masked_lp", masked_lp, "score", score)
 
             if score > best_token_score:
                 best_token_score = score
@@ -571,7 +558,7 @@ def contrastive_token_decoding(
         ):
             break
         current_text += selected_token
-        print(f"Generating: {current_text}")  # Feedback since this is slow
+        logger.debug('%s', f"Generating: {current_text}")  # Feedback since this is slow
     return current_text
 
 
@@ -580,24 +567,6 @@ def test(cfg: DictConfig) -> None:
     inference_instance = GeminiInference(cfg)
     orig_video = cfg.get("orig_video", "path/to/original_video.mp4")
     heatmap_video = cfg.get("heatmap_video", "path/to/gaze_masked_video.mp4")
-
-    # candidate2score = vegas_scoring(
-    #     inference_instance,
-    #     orig_video,
-    #     heatmap_video,
-    #     "Given the video, predict the next word of the caption. Do not say anything else but the next word.",
-    #     candidates=[
-    #         "People are eating meat.",
-    #         "The room is well-lit.",
-    #         "The wall is gray.",
-    #     ],
-    # )
-    # print(candidate2score)
-    """
-    {'People are eating meat.': {'score': 3.7012201449999997, 'raw_logprobs': [-5.0, -5.0, -0.2033487, -1.1955346], 'masked_logprobs': [-5.0, -5.0, -0.100103445, -5.0], 'raw_rankings': [2, 2, 0, 0], 'masked_rankings': [2, 2, 0, 2]},
-    'The room is well-lit.': {'score': -0.31278589999999995, 'raw_logprobs': [-5.0, -5.0, -1.7919289, -5.0], 'masked_logprobs': [-5.0, -5.0, -1.479143, -5.0], 'raw_rankings': [2, -1, 0, 2], 'masked_rankings': [2, -1, 0, 2]},
-    'The wall is gray.': {'score': 0.0, 'raw_logprobs': [-5.0, -5.0, -5.0, -5.0], 'masked_logprobs': [-5.0, -5.0, -5.0, -5.0], 'raw_rankings': [2, -1, -1, 2], 'masked_rankings': [2, -1, -1, 2]}}
-    """
 
     candidate2score = vegas_scoring_with_masking(
         inference_instance,
@@ -615,40 +584,8 @@ def test(cfg: DictConfig) -> None:
             ["wall", "gray"],
         ],
     )
-    print(candidate2score)
+    logger.debug('%s', candidate2score)
 
-    exit()
-
-    caption = "Generate a caption for a video one token at a time. \
-At each step, choose the next token that continues a short, grammatically correct sentence describing the main action in the video. \
-Prefer tokens that form a natural sentence and maintain grammatical correctness. \
-Constraints: \
-1. Produce only the caption text. Do not output labels, prefixes, or explanations. \
-2. Separate words with a single space. \
-3. Stop when the sentence ends. Append the special token `<EOS>` to mark the end of the sentence."
-
-    _, raw_top = inference_instance.video_inference(
-        orig_video,
-        caption + "\nCaption: ",
-        logprobs=1,
-        max_output_tokens=100,
-    )
-    print(_)
-
-    response = contrastive_token_decoding(
-        inference_instance,
-        orig_video,
-        heatmap_video,
-        caption,
-        # "Given the video, predict the next word of the caption. Do not say anything else but the next word.",
-        gamma=1,  # 0.2,
-        temperature=1,
-    )
-    print(response)
-
-    """
-    Generating: AACaption
-    """
 
 
 if __name__ == "__main__":

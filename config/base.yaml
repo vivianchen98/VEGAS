@@ -22,3 +22,6 @@ video_fps: null
 video_frame_sample_rate: null
 video_max_frames: null
 
+
+# Maximum wait for uploaded Gemini videos to finish processing.
+upload_timeout_seconds: 300

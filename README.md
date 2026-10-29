@@ -114,6 +114,8 @@ python src/experiments/compute_vegas.py --config-name=ariaeveryday
 python src/experiments/compute_vegas.py --config-name=slidevqa
 ```
 
+Set `VEGAS_LOG_LEVEL=DEBUG` in `.env` to show detailed scoring diagnostics; the default is `INFO`. Gemini video processing waits up to 300 seconds by default; override with `upload_timeout_seconds=600` on the scoring command. Failed processing stops waiting immediately.
+
 ## Evaluation
 
 Compute caption comparison metrics:
