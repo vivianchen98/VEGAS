@@ -1,3 +1,7 @@
+
+import logging
+
+logger = logging.getLogger(__name__)
 import os
 import sys
 from pathlib import Path
@@ -7,6 +11,10 @@ import numpy as np
 import pandas as pd
 
 sys.path.append(str(Path(__file__).resolve().parents[2]))
+from src.utils.runtime import load_environment, configure_logging
+
+load_environment()
+
 from src.utils.metrics import (
     calculate_pair_cider,
     calculate_cider,
@@ -51,7 +59,7 @@ def process_metrics_human(
         res = df["captions"].apply(func).reset_index(name="score")
         dest_path = os.path.join(save_dir, f"{name}.csv")
         res.to_csv(dest_path, index=False)
-        print(f"Saved {name} to {dest_path}")
+        logger.info('%s', f"Saved {name} to {dest_path}")
         
     # Handle CIDEr separately (special function signature)
     if "cider" in metrics_map:
@@ -63,7 +71,7 @@ def process_metrics_human(
         pd.DataFrame({"vid": cider_vids, "score": cider_scores}).to_csv(
             dest_path, index=False
         )
-        print(f"Saved cider to {dest_path}")
+        logger.info('%s', f"Saved cider to {dest_path}")
 
 def process_metrics_human_vlm(
     cfg,
@@ -110,7 +118,7 @@ def process_metrics_human_vlm(
        
         dest_path = os.path.join(save_dir, f"{name}.csv")
         res.to_csv(dest_path, index=False)
-        print(f"Saved {name} to {dest_path}")
+        logger.info('%s', f"Saved {name} to {dest_path}")
 
     # Handle CIDEr separately (special function signature)
     if "cider" in metrics_map:
@@ -118,12 +126,12 @@ def process_metrics_human_vlm(
         human_captions_per_video = []
         vlm_captions = []
         for vid in vids:
-            # print("vid", vid)
+
             vlm_caption = vlm_df[vlm_df[vid_column_name] == vid][vlm_caption_column_name].tolist()
             human_captions = vlm_df[vlm_df[vid_column_name] == vid][human_caption_column_names].values[0]
-            # print(vlm_caption)
-            # print(human_captions)
-            # input()
+
+
+
             human_captions_per_video.append(human_captions)
             vlm_captions.append(vlm_caption)
 
@@ -136,7 +144,7 @@ def process_metrics_human_vlm(
         pd.DataFrame({"vid": cider_vids, "score": cider_scores}).to_csv(
             dest_path, index=False
         )
-        print(f"Saved cider to {dest_path}")
+        logger.info('%s', f"Saved cider to {dest_path}")
 
 
 def process_metrics_orthogonal(
@@ -213,7 +221,7 @@ def process_metrics_orthogonal(
         # save scores
         dest = os.path.join(save_dir, f"{name}.csv")
         pd.DataFrame({"vid": vids, "score": scores}).to_csv(dest, index=False)
-        print(f"Saved {name} to {dest}")
+        logger.info('%s', f"Saved {name} to {dest}")
 
 
 @hydra.main(version_base=None, config_path="../../config", config_name="ariaeveryday")
@@ -256,4 +264,5 @@ def main(cfg):
     )
 
 if __name__ == "__main__":
+    configure_logging()
     main()

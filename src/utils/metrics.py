@@ -1,3 +1,7 @@
+
+import logging
+
+logger = logging.getLogger(__name__)
 import krippendorff
 import numpy as np
 import warnings
@@ -121,10 +125,10 @@ def calculate_cider(vids: list[str], captions: list[list[str]]) -> tuple[list[st
             all_res[counter] = [captions[i]]
             # Ground Truth: the other captions for that video
             all_gts[counter] = [captions[j] for j in range(len(captions)) if j != i]
-            # print("-----------------------------")
-            # print(all_res[counter])
-            # print(all_gts[counter])
-            # input()
+
+
+
+
 
             video_rotation_indices.append(counter)
             counter += 1
@@ -167,10 +171,10 @@ def calculate_pair_cider(vids: list[str], all_references: list[list[str]], all_c
         all_res[counter] = grouped_ref[vid_id]
         # Ground Truth: the other captions for that video
         all_gts[counter] = captions
-        # print("-----------------------------")
-        # print(all_res[counter])
-        # print(all_gts[counter])
-        # input()
+
+
+
+
 
         video_rotation_indices.append(counter)
         counter += 1
@@ -189,118 +193,6 @@ def calculate_pair_cider(vids: list[str], all_references: list[list[str]], all_c
         vids.append(vid_id)
 
     return vids, video_cider_means
-
-# def calculate_cider_loo_df(df) -> tuple[list[str], list[float]]:
-#     """Calculates mean CIDEr using LOO rotation from a DataFrame."""
-#     scorer = Cider()
-
-#     # 1. Group captions by video_id
-#     grouped = df.groupby("vid")["caption"].apply(list).to_dict()
-
-#     all_gts = {}
-#     all_res = {}
-#     rotations_per_video = []
-#     counter = 0
-
-#     # 2. Build the LOO structures
-#     for vid_id, captions in grouped.items():
-#         video_rotation_indices = []
-
-#         for i in range(len(captions)):
-#             # Reference: the single caption being "tested"
-#             all_res[counter] = [captions[i]]
-#             # Ground Truth: the other captions for that video
-#             all_gts[counter] = [captions[j] for j in range(len(captions)) if j != i]
-
-#             video_rotation_indices.append(counter)
-#             counter += 1
-
-#         rotations_per_video.append((vid_id, video_rotation_indices))
-
-#     # 3. Compute scores in batch
-#     _, individual_scores = scorer.compute_score(all_gts, all_res)
-
-#     # 4. Map scores back to the video IDs
-#     vids = []
-#     video_cider_means = []
-#     for vid_id, indices in rotations_per_video:
-#         video_mean = np.mean([individual_scores[idx] for idx in indices])
-#         video_cider_means.append(video_mean)
-#         vids.append(vid_id)
-
-#     return vids, video_cider_means
-
-
-# def calculate_cider_loo_df_pairwise(
-#     df,
-#     column_name1,
-#     column_name2,
-#     diagonal=False,
-# ) -> tuple[list[str], list[float]]:
-#     """Calculates mean CIDEr using LOO rotation from a DataFrame.
-
-#     Diagonal = True for orthogonal evaluation
-#     """
-#     scorer = Cider()
-#     print(df[column_name1].head().apply(list).to_dict())
-#     print(df[column_name2].head().apply(list).to_dict())
-#     # 1. Group captions by video_id
-#     if diagonal:
-#         grouped1 = df.groupby("vid")[column_name1].apply(list).to_dict()
-#         grouped2 = df.groupby("vid")[column_name2].apply(list).to_dict()
-#     else:
-#         grouped1 = df[column_name1].apply(list).to_dict()
-#         grouped2 = df[column_name2].apply(list).to_dict()
-#     assert len(grouped1) == len(
-#         grouped2,
-#     ), "grouped1 and grouped2 have different lengths"
-#     print(grouped1)
-#     print(list(grouped1.values())[0])
-#     assert len(list(grouped1.values())[0]) == 1, "grouped1 has more than 1 caption per video"
-#     assert len(list(grouped2.values())[0]) == 1, "grouped2 has more than 1 caption per video"
-
-#     all_gts = {}
-#     all_res = {}
-#     rotations_per_video = []
-#     counter = 0
-
-#     # 2. Build the LOO structures
-#     for vid_id, captions in grouped1.items():
-#         video_rotation_indices = []
-
-#         for i in range(len(captions)):
-#             # Reference: the single caption being "tested"
-#             all_res[counter] = [captions[i]]
-#             # Ground Truth: the other captions for that video
-#             if diagonal:
-#                 all_gts[counter] = [grouped2[vid_id][i]]
-#             else:
-#                 all_gts[counter] = grouped2[vid_id]
-#                 assert len(grouped2[vid_id]) >= 1
-
-#             video_rotation_indices.append(counter)
-#             counter += 1
-
-#         rotations_per_video.append((vid_id, video_rotation_indices))
-
-#     assert len(all_gts) == len(all_res), "all_gts and all_res have different lengths"
-
-#     # 3. Compute scores in batch
-#     print(all_gts)
-#     print(all_res)
-#     input()
-#     _, individual_scores = scorer.compute_score(all_gts, all_res)
-
-#     # 4. Map scores back to the video IDs
-#     vids = []
-#     video_cider_means = []
-#     for vid_id, indices in rotations_per_video:
-#         video_mean = np.mean([individual_scores[idx] for idx in indices])
-#         video_cider_means.append(video_mean)
-#         vids.append(vid_id)
-
-#     return vids, video_cider_means
-
 
 def calculate_self_sbert(captions) -> float:
     """Input: A list of strings (captions generated for ONE image).
@@ -504,5 +396,5 @@ def calculate_bertscore_recall(
 if __name__ == "__main__":
     captions1 = ["I am putting magazine on the table."]
     captions2 = ["I am putting magazine on the table."]
-    print(calculate_token_IoU(captions1 + captions2))
+    logger.debug('%s', calculate_token_IoU(captions1 + captions2))
     
